@@ -17,16 +17,26 @@ async function getOrCompute(metricType, { year, district } = {}) {
     throw new Error(`未知的统计类型: ${metricType}`);
   }
 
-  const statYear = year || new Date().getFullYear();
   const distKey = district || '';
+  const hasYear = year !== undefined && year !== null;
+  const statYear = hasYear ? year : new Date().getFullYear();
 
-  const cached = await store.getSummary(statYear, distKey, metricType);
-  if (cached && !cached.stale) {
-    return cached.payload;
+  if (hasYear) {
+    const cached = await store.getSummary(statYear, distKey, metricType);
+    if (cached && !cached.stale) {
+      return cached.payload;
+    }
   }
 
-  const payload = await COMPUTE_MAP[metricType]({ year: statYear, district: distKey || undefined });
-  await store.saveSummary(statYear, distKey, metricType, payload);
+  const payload = await COMPUTE_MAP[metricType]({
+    year: hasYear ? statYear : undefined,
+    district: distKey || undefined,
+  });
+
+  if (hasYear) {
+    await store.saveSummary(statYear, distKey, metricType, payload);
+  }
+
   return payload;
 }
 

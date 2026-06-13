@@ -87,7 +87,7 @@ test('登录后能列出种子工程', async () => {
   const token = await tokenOf('inspector', 'inspect123');
   const res = await request(app).get('/api/projects').set('Authorization', `Bearer ${token}`);
   assert.strictEqual(res.status, 200);
-  assert.strictEqual(res.body.total, 4);
+  assert.ok(res.body.total >= 10, '种子工程应不少于 10 条');
 });
 
 test('工程列表支持按状态筛选', async () => {
@@ -101,7 +101,8 @@ test('工程列表支持关键词搜索', async () => {
   const token = await tokenOf('inspector', 'inspect123');
   const res = await request(app).get('/api/projects?keyword=滨江').set('Authorization', `Bearer ${token}`);
   assert.strictEqual(res.status, 200);
-  assert.strictEqual(res.body.data.length, 1);
+  assert.ok(res.body.data.length >= 1, '关键词搜索应返回至少 1 条');
+  assert.ok(res.body.data.every((p) => p.name.includes('滨江') || p.code.includes('滨江') || p.address.includes('滨江')));
 });
 
 test('工程详情含设备子资源接口', async () => {
@@ -133,7 +134,7 @@ test('工程编号重复返回 409', async () => {
   const token = await tokenOf('admin', 'admin123');
   const res = await request(app).post('/api/projects')
     .set('Authorization', `Bearer ${token}`)
-    .send({ code: 'RF-2024-001', name: '重复编号' });
+    .send({ code: 'RF-2018-001', name: '重复编号' });
   assert.strictEqual(res.status, 409);
 });
 

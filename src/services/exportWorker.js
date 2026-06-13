@@ -164,7 +164,7 @@ function stop() {
 }
 
 function generateTaskKey(metricType, filters, format) {
-  const payload = `${metricType}:${JSON.stringify(filters)}:${format}:${Date.now()}`;
+  const payload = `${metricType}:${JSON.stringify(filters)}:${format}`;
   return crypto.createHash('md5').update(payload).digest('hex').substring(0, 16);
 }
 

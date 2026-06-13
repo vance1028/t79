@@ -97,8 +97,20 @@ router.post('/', wrap(async (req, res) => {
   const taskKey = exportWorker.generateTaskKey(metricType, filters, format);
 
   const existing = await store.getExportTaskByKey(taskKey);
-  if (existing && existing.status === 'COMPLETED') {
-    return res.json({ data: existing });
+  if (existing) {
+    if (['QUEUED', 'GENERATING', 'COMPLETED'].includes(existing.status)) {
+      return res.json({ data: existing });
+    }
+    if (existing.status === 'FAILED') {
+      await store.updateExportTask(existing.id, {
+        status: 'QUEUED',
+        progress: 0,
+        filePath: null,
+        errorMsg: null,
+      });
+      const retried = await store.getExportTask(existing.id);
+      return res.json({ data: retried });
+    }
   }
 
   const task = await store.createExportTask({

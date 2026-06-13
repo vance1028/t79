@@ -489,7 +489,7 @@ function _inventoryWhere(year, district) {
   const where = [];
   const params = [];
   if (year !== undefined) {
-    where.push('(completed_at <= ? OR completed_at IS NULL)');
+    where.push('completed_at <= ?');
     params.push(`${year}-12-31`);
   }
   if (district !== undefined && district !== '') {
@@ -518,7 +518,7 @@ async function computeInventory({ year, district } = {}) {
      FROM projects ${clause} GROUP BY status ORDER BY status`, params);
 
   const districtClause = year !== undefined
-    ? `WHERE (completed_at <= ? OR completed_at IS NULL)`
+    ? `WHERE completed_at <= ?`
     : '';
   const districtParams = year !== undefined ? [`${year}-12-31`] : [];
   const [byDistrict] = await pool.query(
@@ -583,7 +583,7 @@ async function computeInspectionCoverage({ year, district } = {}) {
   const [[dueRow]] = await pool.query(
     `SELECT COUNT(*) AS cnt FROM projects p
      WHERE p.status IN ('NORMAL','MAINTENANCE')
-       AND (p.completed_at <= ? OR p.completed_at IS NULL)
+       AND p.completed_at <= ?
        ${districtFilter}`,
     [yearEnd, ...districtParam],
   );
@@ -627,7 +627,7 @@ async function computeInspectionCoverage({ year, district } = {}) {
   const [dueByDist] = await pool.query(
     `SELECT p.district, COUNT(*) AS cnt FROM projects p
      WHERE p.status IN ('NORMAL','MAINTENANCE')
-       AND (p.completed_at <= ? OR p.completed_at IS NULL)
+       AND p.completed_at <= ?
      GROUP BY p.district`,
     [yearEnd],
   );
@@ -736,7 +736,7 @@ async function computeEquipmentStats({ year, district } = {}) {
   const conditions = [];
   const params = [];
   if (yearEnd) {
-    conditions.push('(p.completed_at <= ? OR p.completed_at IS NULL)');
+    conditions.push('p.completed_at <= ?');
     params.push(yearEnd);
   }
   if (district && district !== '') {
